@@ -22,33 +22,101 @@ with the DIY solution fails\).
 ## Project structure
 
 ```
-├── CMakeLists.txt
-├── pytest_hello_world.py      Python script used for automated testing
+├── CMakeLists.txt                 ESP-IDF project entry point
+├── COPYING
+├── LICENSE.txt
+├── README.md                      Project overview and setup notes
+├── build/                         Generated build artifacts (firmware, bootloader, configs)
+├── build.sh                       Convenience wrapper for native build
+├── build_esp32.sh                 Flash/build helper for ESP32 target
+├── build_web.sh                   Front-end build script
+├── components/                    ESP-IDF components (BT stack, NimBLE, utilities)
+├── custom_partitions.csv          Partition table definition
+├── dependencies.lock              ESP-IDF managed component lockfile
 ├── main
 │   ├── CMakeLists.txt
-│   └── hello_world_main.c
-└── README.md                  This is the file you are currently reading
+│   ├── ble_service.cpp            BLE service implementation
+│   ├── ble_service.h
+│   ├── includes
+│   │   └── svelteesp32.h          Bridge header for Svelte/ESP integration
+│   ├── jarvis_main.cpp            Application entry for ESP firmware
+│   ├── motor_controller.cpp       Motor control logic
+│   ├── motor_controller.h
+│   └── services
+│       ├── ble.cc                 BLE service wiring
+│       └── ble.hh
+├── pytest_hello_world.py          Example automated test shim
+├── sdkconfig                      Active ESP-IDF configuration
+├── sdkconfig.ci                   CI-focused ESP-IDF configuration
+├── sdkconfig.old                  Previous ESP-IDF configuration snapshot
+└── web
+    ├── package.json               Web client dependencies and scripts
+    ├── pnpm-lock.yaml
+    ├── src
+    │   ├── App.svelte             Svelte front-end root component
+    │   ├── app.postcss
+    │   ├── main.ts                Svelte/Vite bootstrap
+    │   └── svelte-shim.d.ts
+    ├── public
+    │   └── favicon.svg
+    ├── dist/                      Bundled web assets (generated)
+    ├── scripts
+    │   └── ensure-svelte-shims.cjs
+    ├── tailwind.config.cjs
+    ├── tsconfig.json
+    └── vite.config.ts
 ```
 
-## Building
+## How to Use
 
-After cloning the repo, also clone the submodules:
+After cloning the repo, remember to also clone the submodules:
 
 ```
 git submodule update --init --recursive
 ```
 
-Inside of the frontend \(web/\) folder:
-- Install the dependencies
-- Build the frontend
-- Execute `npx svelteesp32 -e espidf -s ../web/dist -o ../main/includes/svelteesp32.h --etag=true` to generate the header file
+The repository includes helper scripts in the project root to streamline both the web build and the ESP32 firmware workflow.
 
+Remember to setup the build folder first with:
 
 ```
-cd web
-pnpm install
-pnpm run build
-npx svelteesp32 -e espidf -s ../web/dist -o ../main/includes/svelteesp32.h --etag=true
+idf.py set-target esp32s3
+```
+
+**Scripts**:
+
+- `./build.sh` &mdash; Regenerates the web frontend and then rebuilds, flashes, and monitors the firmware in one step. Pass any of the firmware options below and they will be forwarded automatically.
+- `./build_web.sh` &mdash; Installs dependencies (requires `npm` and `pnpm`), compiles the Svelte frontend, and regenerates `main/includes/svelteesp32.h`.
+- `./build_esp32.sh [options]` &mdash; Handles the ESP-IDF toolchain setup, builds the firmware, and optionally flashes/monitors the device.
+
+### ESP32 script options
+
+- `--port <device>` &mdash; Serial port used by `idf.py flash/monitor` (defaults to `/dev/ttyUSB0`; override by exporting `PORT=/dev/ttyACM0` or passing the flag).
+- `--no-flash` &mdash; Build only; skip flashing.
+- `--no-monitor` &mdash; Skip the serial monitor after flashing.
+
+The firmware scripts load ESP-IDF automatically by sourcing `. "$HOME/esp/esp-idf/export.sh"`. If your toolchain lives elsewhere, set `IDF_SETUP_CMD` to point at your export command, for example:
+
+```bash
+IDF_SETUP_CMD='source ~/esp-idf/export.sh' ./build_esp32.sh --no-monitor
+```
+
+### Build all
+
+```
+./build.sh
+```
+
+### Build ESP32 code
+
+```
+./build_esp32.sh
+```
+
+### Build frontend
+
+```
+./build_web.sh
 ```
 
 ## Examples
