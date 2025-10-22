@@ -14,5 +14,5 @@ idf_component_register(
         esp-nimble-cpp
     INCLUDE_DIRS
         # Frontend output (../web/esp32svelteesp32.h)
-        "./includes/"
+        "./include/"
 )

@@ -19,4 +19,4 @@ cd "${PROJECT_ROOT}/web"
 pnpm install
 pnpm run build
 
-npx svelteesp32 -e espidf -s ../web/dist -o ../main/includes/svelteesp32.h --etag=true
+npx svelteesp32 -e espidf -s ../web/dist -o ../main/include/svelteesp32.h --etag=true
