@@ -1,5 +1,5 @@
 //engine:   espidf
-//cmdline:  -e espidf -s ../web/dist -o ../main/includes/svelteesp32.h --etag=true
+//cmdline:  -e espidf -s ../web/dist -o ../main/include/svelteesp32.h --etag=true
 
 #ifdef SVELTEESP32_ENABLE_ETAG
 #warning SVELTEESP32_ENABLE_ETAG has no effect because it is permanently switched ON
