@@ -42,21 +42,21 @@ with the DIY solution fails\).
 │   │   └── svelteesp32.h          Bridge header for Svelte/ESP integration
 │   ├── jarvis_main.cpp            Application entry for ESP firmware
 │   ├── services
-│       ├── ble
-│       │   ├── ble.cc             BLE service wiring
-│       │   └── ble.hh
-│       ├── can_bus
-│       │   ├── can.cc             CAN bus orchestration
-│       │   └── can.hh
-│       ├── lte
-│       │   ├── lte.cc             LTE modem orchestration
-│       │   └── lte.hh
-│       ├── web
-│       │   ├── http_server.cc     HTTP server wiring
-│       │   └── http_server.hh
-│       └── wifi
-│           ├── wifi.cc            Wi-Fi management
-│           └── wifi.hh
+│   │   ├── ble
+│   │   │   ├── ble.cc             BLE service wiring
+│   │   │   └── ble.hh
+│   │   ├── can_bus
+│   │   │   ├── can.cc             CAN bus orchestration
+│   │   │   └── can.hh
+│   │   ├── lte
+│   │   │   ├── lte.cc             LTE modem orchestration
+│   │   │   └── lte.hh
+│   │   ├── web
+│   │   │   ├── http_server.cc     HTTP server wiring
+│   │   │   └── http_server.hh
+│   │   └── wifi
+│   │       ├── wifi.cc            Wi-Fi management
+│   │       └── wifi.hh
 │   └── telemetry                  Sensor and controller data
 │       └── motor                  Far-driver motor telemetry interface
 │           ├── motor_controller.cpp  Motor control logic
