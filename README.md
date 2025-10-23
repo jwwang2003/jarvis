@@ -137,6 +137,27 @@ IDF_SETUP_CMD='source ~/esp-idf/export.sh' ./build_esp32.sh --no-monitor
 
 ## Development
 
+### BLE \(Nimble\)
+
+Recommended to take a look at the HID device implementation: `esp-idf/examples/bluetooth/esp_hid_device`.
+
+I previously have ran into problems where the device would not show up on IOS, and even if it does, pairing does not
+really work as expected. THe `esp_hid_device` example works perfectly and I think provides a very good foundation for
+how to set up a BLE server on the ESP32 device.
+
+Parts of the implementation in my code directly mimics or references the implementation. You can read the project files
+inside of `services/ble`, I have made detailed comments and notes on the implementation.
+
+Some of the BLE features include:
+- BLE pairing
+- IOS \(and Android?\) bluetooth auto-pairing
+- Automatic unlocking via paired / authorized devices
+- Telemetry updates via custom app
+- Remote configuration
+- Remote operation of the bike \(assuming that I get this far, implementing a CAN BUS into my bike and all that\)
+
+### VS Code
+
 If code hints and recommendations do not show up, remember to set the proper configuration for your C++ intellisense:
 
 ![](assets/imgs/esp32-lib-include.png)
