@@ -22,6 +22,7 @@ with the DIY solution fails\).
 ## Project structure
 
 ```
+├── assets/                        Reference images and docs
 ├── CMakeLists.txt                 ESP-IDF project entry point
 ├── COPYING
 ├── LICENSE.txt
@@ -37,14 +38,29 @@ with the DIY solution fails\).
 │   ├── CMakeLists.txt
 │   ├── ble_service.cpp            BLE service implementation
 │   ├── ble_service.h
-│   ├── includes
+│   ├── include
 │   │   └── svelteesp32.h          Bridge header for Svelte/ESP integration
 │   ├── jarvis_main.cpp            Application entry for ESP firmware
-│   ├── motor_controller.cpp       Motor control logic
-│   ├── motor_controller.h
-│   └── services
-│       ├── ble.cc                 BLE service wiring
-│       └── ble.hh
+│   ├── services
+│       ├── ble
+│       │   ├── ble.cc             BLE service wiring
+│       │   └── ble.hh
+│       ├── can_bus
+│       │   ├── can.cc             CAN bus orchestration
+│       │   └── can.hh
+│       ├── lte
+│       │   ├── lte.cc             LTE modem orchestration
+│       │   └── lte.hh
+│       ├── web
+│       │   ├── http_server.cc     HTTP server wiring
+│       │   └── http_server.hh
+│       └── wifi
+│           ├── wifi.cc            Wi-Fi management
+│           └── wifi.hh
+│   └── telemetry                  Sensor and controller data
+│       └── motor                  Far-driver motor telemetry interface
+│           ├── motor_controller.cpp  Motor control logic
+│           └── motor_controller.h
 ├── pytest_hello_world.py          Example automated test shim
 ├── sdkconfig                      Active ESP-IDF configuration
 ├── sdkconfig.ci                   CI-focused ESP-IDF configuration
@@ -118,6 +134,26 @@ IDF_SETUP_CMD='source ~/esp-idf/export.sh' ./build_esp32.sh --no-monitor
 ```
 ./build_web.sh
 ```
+
+## Development
+
+If code hints and recommendations do not show up, remember to set the proper configuration for your C++ intellisense:
+
+![](assets/imgs/esp32-lib-include.png)
+
+1. Open the Command Palette: Press `Ctrl + Shift + P` (Windows/Linux) or `Cmd + Shift + P` (macOS).
+2. Edit C/C++ Configurations: Type "C/C++: Edit Configurations (UI)" and select it. This will open the C/C++ extension's configuration settings.
+3. Configure Include Paths: Locate the "Include Path" section within the configuration for your active environment (e.g., "Win32", "Linux", "Mac").
+4. Add the necessary paths to your ESP-IDF components and other relevant header directories.
+    ```
+    "${config:idf.espIdfPath}/components/**",
+    "${config:idf.espIdfPathWin}/components/**", // For Windows
+    "${workspaceFolder}/**"
+    ```
+
+    > If you have custom components or libraries, add their respective paths as well, using ${workspaceFolder} for project-relative paths.
+5. Save the Configuration: Save the c_cpp_properties.json file.
+6. Restart VS Code (Optional, but Recommended): Sometimes, a restart of VS Code can help refresh the IntelliSense engine and resolve the issue.
 
 ## Examples
 

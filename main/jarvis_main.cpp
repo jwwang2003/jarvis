@@ -13,8 +13,12 @@ namespace
 constexpr const char* kLogTag = "JarvisMain";
 }
 
+/**
+ * MAIN function
+ */
 extern "C" void app_main(void)
 {
+    // Initialize WiFi service (softAP)
     WifiService wifiService;
 
     esp_err_t err = wifiService.init();
@@ -39,6 +43,8 @@ extern "C" void app_main(void)
         }
     }
 
+    // Initialize the HTTP server
+    // Begin hosting our backend & REST APIs
     httpd_handle_t server = nullptr;
     if (err == ESP_OK)
     {

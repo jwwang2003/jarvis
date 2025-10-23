@@ -13,11 +13,11 @@
 
 namespace
 {
-constexpr const char* kLogTag               = "WifiService";
-std::size_t clampLength(std::size_t value, std::size_t maxLen)
-{
-    return value > maxLen ? maxLen : value;
-}
+    constexpr const char *kLogTag = "WifiService";
+    std::size_t clampLength(std::size_t value, std::size_t maxLen)
+    {
+        return value > maxLen ? maxLen : value;
+    }
 } // namespace
 
 #ifndef WIFI_SSID_MAX_LEN
@@ -28,8 +28,10 @@ std::size_t clampLength(std::size_t value, std::size_t maxLen)
 #define WIFI_PASSWD_MAX_LEN MAX_PASSPHRASE_LEN
 #endif
 
+// WifiService deconstructor 
 WifiService::~WifiService()
 {
+    // Stop & de-initialize the soft AP, if active
     if (apActive_)
     {
         const esp_err_t stopErr = esp_wifi_stop();
@@ -39,6 +41,7 @@ WifiService::~WifiService()
         }
     }
 
+    // Stop & de-initialize the wifi interface, if active
     if (initialized_)
     {
         const esp_err_t deinitErr = esp_wifi_deinit();
@@ -47,6 +50,8 @@ WifiService::~WifiService()
             ESP_LOGW(kLogTag, "esp_wifi_deinit failed: %d", deinitErr);
         }
     }
+
+    // Teardown complete
 }
 
 esp_err_t WifiService::ensureInitialized()
@@ -65,6 +70,7 @@ esp_err_t WifiService::init()
         return ESP_OK;
     }
 
+    // Initialize NVS (Non-Volatile Storage)
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
     {
@@ -77,12 +83,14 @@ esp_err_t WifiService::init()
         }
         err = nvs_flash_init();
     }
+    // Error checking for NVS initialization
     if (err != ESP_OK)
     {
         ESP_LOGE(kLogTag, "Failed to initialise NVS: %d", err);
         return err;
     }
 
+    // Initialize network interface
     err = esp_netif_init();
     if (err != ESP_OK && err != ESP_ERR_INVALID_STATE)
     {
@@ -90,6 +98,7 @@ esp_err_t WifiService::init()
         return err;
     }
 
+    // Create an event loop 
     err = esp_event_loop_create_default();
     if (err != ESP_OK && err != ESP_ERR_INVALID_STATE)
     {
@@ -99,37 +108,42 @@ esp_err_t WifiService::init()
 
     if (apNetif_ == nullptr)
     {
+        // Create an access point network interface if it DNE
         apNetif_ = esp_netif_create_default_wifi_ap();
         if (apNetif_ == nullptr)
         {
+            // On error
             ESP_LOGE(kLogTag, "Failed to create default Wi-Fi AP interface");
             return ESP_FAIL;
         }
     }
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    err                    = esp_wifi_init(&cfg);
+    err = esp_wifi_init(&cfg);
     if (err != ESP_OK && err != ESP_ERR_WIFI_INIT_STATE)
     {
         ESP_LOGE(kLogTag, "esp_wifi_init failed: %d", err);
         return err;
     }
 
+    // Successful initialization of the WiFi AP
     initialized_ = true;
     return ESP_OK;
 }
 
-esp_err_t WifiService::startSoftAp(const SoftApConfig& config)
+esp_err_t WifiService::startSoftAp(const SoftApConfig &config)
 {
     SoftApConfig cfg = config;
     cfg.applySecurityDefaults();
 
+    // Check if AP interface is initialized yet
     esp_err_t err = ensureInitialized();
     if (err != ESP_OK)
     {
         return err;
     }
 
+    // Ensure that SSID is not empty or too long
     if (cfg.ssid.empty())
     {
         ESP_LOGE(kLogTag, "SoftAP SSID must not be empty");
@@ -140,6 +154,7 @@ esp_err_t WifiService::startSoftAp(const SoftApConfig& config)
         ESP_LOGE(kLogTag, "SoftAP SSID too long (%zu)", cfg.ssid.size());
         return ESP_ERR_INVALID_ARG;
     }
+    // Make sure that the password set meets WPA2 requirements
     if (cfg.requiresPassword())
     {
         if (cfg.password.size() < 8 || cfg.password.size() > WIFI_PASSWD_MAX_LEN)
@@ -149,6 +164,7 @@ esp_err_t WifiService::startSoftAp(const SoftApConfig& config)
         }
     }
 
+    // Ensure that channel selection is valid
     if (cfg.channel < 1 || cfg.channel > 13)
     {
         ESP_LOGW(kLogTag, "SoftAP channel %u out of range, defaulting to 1", cfg.channel);
@@ -185,15 +201,17 @@ esp_err_t WifiService::startSoftAp(const SoftApConfig& config)
         authMode = cfg.requiresPassword() ? WIFI_AUTH_WPA_WPA2_PSK : WIFI_AUTH_OPEN;
     }
 
-    apConfig.ap.authmode       = authMode;
-    const uint8_t maxConn      = std::max<uint8_t>(cfg.maxConnections, 1);
-    apConfig.ap.max_connection = std::min<uint8_t>(maxConn, 10);
-    apConfig.ap.channel        = (cfg.channel >= 1 && cfg.channel <= 13) ? cfg.channel : 1;
-    apConfig.ap.ssid_hidden    = cfg.ssidHidden ? 1 : 0;
-    apConfig.ap.beacon_interval = 100;
-    apConfig.ap.pmf_cfg.capable = (authMode >= WIFI_AUTH_WPA2_PSK);
+    // Configure the soft AP
+    apConfig.ap.authmode = authMode;                                                            // Set auth mode
+    const uint8_t maxConn = std::max<uint8_t>(cfg.maxConnections, 1);                           
+    apConfig.ap.max_connection = std::min<uint8_t>(maxConn, 10);                                // Max number of connections
+    apConfig.ap.channel = (cfg.channel >= 1 && cfg.channel <= 13) ? cfg.channel : 1;            // Channel selection
+    apConfig.ap.ssid_hidden = cfg.ssidHidden ? 1 : 0;                                           // Hidden AP?
+    apConfig.ap.beacon_interval = 100;                                                          // Broadcast refresh rate
+    apConfig.ap.pmf_cfg.capable = (authMode >= WIFI_AUTH_WPA2_PSK);                             // AP security level
     apConfig.ap.pmf_cfg.required = (authMode == WIFI_AUTH_WPA3_PSK || authMode == WIFI_AUTH_WPA2_WPA3_PSK);
 
+    // Attempt to set the configs
     err = esp_wifi_set_mode(WIFI_MODE_AP);
     if (err != ESP_OK)
     {
@@ -208,6 +226,7 @@ esp_err_t WifiService::startSoftAp(const SoftApConfig& config)
         return err;
     }
 
+    // Attempt to start the soft AP service
     if (!apActive_)
     {
         err = esp_wifi_start();
@@ -219,6 +238,7 @@ esp_err_t WifiService::startSoftAp(const SoftApConfig& config)
         apActive_ = true;
     }
 
+    // Successfully configured & started soft AP
     softApConfig_ = cfg;
     ESP_LOGI(kLogTag,
              "SoftAP started ssid='%s' channel=%u max_conn=%u hidden=%d",
